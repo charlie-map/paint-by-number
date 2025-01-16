@@ -1,4 +1,22 @@
 /** NOTE: This MUST	be loaded for meta.js to work */
+
+/**
+ * Builds a basic cwqs element
+ * @author charlie-map
+ *
+ * @param {string} element - new element to build
+ * @returns {Node} The element that returns from the createElement method.
+ */
+function $gencwqs(element) {
+	const newcwqs = document.createElement(element);
+
+	newcwqs.$cwqs = $cwqs;
+	newcwqs.$cwqsSafe = $cwqsSafe;
+	newcwqs.$cwqsAll = $cwqsAll;
+
+	return newcwqs;
+}
+
 /**
  * $cwqs A simple wrapper around querySelector.
  * @author charlie-map

@@ -30,6 +30,8 @@ $cwqs('#new-image-upload', (uploader) => {
         const file = event.target.files[0];
         const reader = new FileReader();
 
+        const body = $cwqs('body');
+
         reader.onload = (e) => {
             const img = new Image();
             img.onload = () => {
@@ -41,16 +43,7 @@ $cwqs('#new-image-upload', (uploader) => {
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const pixels = imageData.data;
 
-                // Process pixel values
-                for (let i = 0; i < pixels.length; i += 4) {
-                    const red = pixels[i];
-                    const green = pixels[i + 1];
-                    const blue = pixels[i + 2];
-                    const alpha = pixels[i + 3];
-
-                    // Do something with the pixel values
-                    console.log("Pixel", i / 4, ": R=", red, "G=", green, "B=", blue, "A=", alpha);
-                }
+                renderImage(canvas.width, canvas.height, pixels, body.offsetWidth / canvas.width);
             };
             img.src = e.target.result;
         };
