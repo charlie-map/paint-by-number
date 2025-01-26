@@ -31,21 +31,33 @@ $cwqs('#new-image-upload', (uploader) => {
         const reader = new FileReader();
 
         const body = $cwqs('body');
+        body.$cwqs('#image-container').innerHTML = '';
 
         reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage(img, 0, 0);
+            console.log('reader loaded', e);
 
-                // Get pixel data
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const pixels = imageData.data;
+            // const img = new Image();
+            // img.onload = function() {
+            //     canvas.width = img.width;
+            //     canvas.height = img.height;
+            //     ctx.drawImage(img, 0, 0);
 
-                renderImage(canvas.width, canvas.height, pixels, body.offsetWidth / canvas.width);
-            };
-            img.src = e.target.result;
+            //     // Get pixel data
+            //     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            //     const pixels = imageData.data;
+
+            //     console.log('generate?');
+            //     generateImageData({
+            //         imageData: pixels,
+            //     });
+            // };
+
+            generateImageData({
+                imageData: e.target.result,
+                onError: (e) => {
+                    console.log('error', e);
+                }
+            });
         };
 
         reader.readAsDataURL(file);

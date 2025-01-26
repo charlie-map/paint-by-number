@@ -1,8 +1,8 @@
 
 #image-container {
-    overflow: auto;
-    max-width: 100%;
-    max-height: calc(100% - 180px);
+    overflow: scroll;
+    width: 100%;
+    height: calc(100% - 180px);
 }
 
 .pixel-row {
@@ -10,15 +10,14 @@
     justify-content: space-around;
 }
 
-.pixel-wrapper {
-    border: 1px solid black;
+pixel-wrapper {
     background-color: white;
 }
 
-.pixel h4 {
+pixel h4 {
     color: black;
 }
 
-.pixel h4.high-contrast {
+pixel h4.high-contrast {
     color: white;
 }
