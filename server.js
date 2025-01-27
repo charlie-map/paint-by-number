@@ -9,6 +9,7 @@ import express from "express";
 import mustache from 'mustache-express';
 
 import { generate } from './generator.js';
+import sql from './sql.js';
 
 const app = express();
 
@@ -16,7 +17,10 @@ const imageRouter = express.Router();
 imageRouter.use(express.json({ limit: '10Mb' }));
 imageRouter.post('/generate', async (req, res) => {
     console.log('body', req.body);
-    generate(req.body.image);
+    await Promise.all([
+        sql.insert.image(req.body.image),
+        generate(req.body.image)
+    ]);
 
     res.json({ response: 'okay' });
 });
