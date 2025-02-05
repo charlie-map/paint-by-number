@@ -6,11 +6,9 @@
  *  - onProgress: (event) => {}
  *  - onLoad: (event) => {}
  *  - onError: (event) => {}
- *  - onAbort: (event) => {}
  */
 function generateImageData(input) {
-    const { imageData, onProgress, onLoad, onError, onAbort } = input;
-    console.log('generate', imageData);
+    const { imageData, onProgress, onLoad, onError } = input;
 
     Meta.xhr.send({
         type: "POST",
@@ -22,9 +20,7 @@ function generateImageData(input) {
             "Content-type": "application/json"
         },
 
-        success: (res) => {
-            console.log(res);
-        },
+        success: onLoad,
 
         failure: (e) => {
             console.log('fail', e);

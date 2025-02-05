@@ -16,12 +16,12 @@ const app = express();
 const imageRouter = express.Router();
 imageRouter.use(express.json({ limit: '10Mb' }));
 imageRouter.post('/generate', async (req, res) => {
-    await Promise.all([
+    const [generatedImage] = await Promise.all([
         // sql.insert.image(req.body.image),
         generate(req.body.image)
     ]);
 
-    res.json({ response: 'okay' });
+    res.json(generatedImage);
 });
 
 app.use('/image', imageRouter);

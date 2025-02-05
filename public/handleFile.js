@@ -19,9 +19,6 @@ function handleFileUpload() {
 }
 
 $cwqs('#new-image-upload', (uploader) => {
-    const canvas = $cwqs('#image-canvas');
-    const ctx = canvas.getContext('2d');
-
     uploader.addEventListener('change', (event) => {
         if (event.target.files.length > 0) {
             // Too many files uploaded!!
@@ -34,26 +31,12 @@ $cwqs('#new-image-upload', (uploader) => {
         body.$cwqs('#image-container').innerHTML = '';
 
         reader.onload = (e) => {
-            console.log('reader loaded', e);
-
-            // const img = new Image();
-            // img.onload = function() {
-            //     canvas.width = img.width;
-            //     canvas.height = img.height;
-            //     ctx.drawImage(img, 0, 0);
-
-            //     // Get pixel data
-            //     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            //     const pixels = imageData.data;
-
-            //     console.log('generate?');
-            //     generateImageData({
-            //         imageData: pixels,
-            //     });
-            // };
-
             generateImageData({
                 imageData: e.target.result,
+                onLoad: (result) => {
+                    const { width, height, centroids, pixels } = JSON.parse(result);
+                    new BaseImage(width, height, centroids, pixels);
+                },
                 onError: (e) => {
                     console.log('error', e);
                 }

@@ -24,27 +24,43 @@ export async function generate(imageData, difficulty = 'medium') {
     // Generate simple cells.
     const amountOfPixels = postWidth * postHeight;
     const amountOfCentroids = Math.ceil(amountOfPixels / 150);
-    console.log('cent', amountOfCentroids);
-    const centroids = Array.from(new Array(amountOfCentroids), (_centroid) => ([
-        Math.floor(Math.random() * 255),
-        Math.floor(Math.random() * 255),
-        Math.floor(Math.random() * 255),
-    ]));
+    const centroids = Array.from(new Array(amountOfCentroids), (_centroid) => ({
+        R: Math.floor(Math.random() * 255),
+        G: Math.floor(Math.random() * 255),
+        B: Math.floor(Math.random() * 255),
+    }));
 
     const averageCells = getAverageCells(data, width, height, pixelSize, centroids);
 
-    const centroidMovingAverages = {};
-    centroids.forEach((centroid, centIndex) => {
-        centroidMovingAverages[centIndex] = {
-            R: centroid[0],
-            G: centroid[1],
-            B: centroid[2],
+    const centroidMovingAverages = [];
+    centroids.forEach((centroid) => {
+        centroidMovingAverages.push({
+            centroid,
             foundPoints: 0,
-        }
+        })
     });
 
-    console.log('make centroid indexer', centroidMovingAverages, amountOfPixels);
+    calculateCentroidAverages(averageCells, amountOfPixels, centroidMovingAverages);
+    migratePixelsToBetterCentroids(averageCells, amountOfPixels, centroidMovingAverages)
 
+    const baseCells = averageCells.map(cell => cell.centroidIndex);
+
+    return {
+        width: postWidth,
+        height: postHeight,
+        centroids: centroidMovingAverages,
+        pixels: baseCells,
+    };
+}
+
+/**
+ * Re-calculate each centroids average.
+ *
+ * @param {Pixel[]} averageCells
+ * @param {number} amountOfPixels
+ * @param {{ centroid: { R: number, G: number, B: number }, foundPoints: number }[]} centroidMovingAverages
+ */
+function calculateCentroidAverages(averageCells, amountOfPixels, centroidMovingAverages) {
     // Average the centroids around a few times to even things out
     for (let pixelIndex = 0; pixelIndex < amountOfPixels; pixelIndex++) {
         const cell = averageCells[pixelIndex];
@@ -53,17 +69,33 @@ export async function generate(imageData, difficulty = 'medium') {
             continue;
         }
 
-        console.log(cell.centroidIndex);
         const currentCentroid = centroidMovingAverages[cell.centroidIndex];
 
         //TWO different averages for both x and y(3 averages for color)
-        currentCentroid.R = (currentCentroid.R * currentCentroid.foundPoints + cell.r) / (currentCentroid.foundPoints + 1);
-        currentCentroid.G = (currentCentroid.G * currentCentroid.foundPoints + cell.g) / (currentCentroid.foundPoints + 1);
-        currentCentroid.B = (currentCentroid.B * currentCentroid.foundPoints + cell.b) / (currentCentroid.foundPoints + 1);
+        currentCentroid.centroid.R = (currentCentroid.centroid.R * currentCentroid.foundPoints + cell.r) / (currentCentroid.foundPoints + 1);
+        currentCentroid.centroid.G = (currentCentroid.centroid.G * currentCentroid.foundPoints + cell.g) / (currentCentroid.foundPoints + 1);
+        currentCentroid.centroid.B = (currentCentroid.centroid.B * currentCentroid.foundPoints + cell.b) / (currentCentroid.foundPoints + 1);
         currentCentroid.foundPoints += 1;
     }
+}
 
-    console.log('some centroids', centroidMovingAverages);
+/**
+ * Re-calculate each Pixel's centroid.
+ *
+ * @param {Pixel[]} averageCells 
+ * @param {number} amountOfPixels
+ * @param {{ centroid: { R: number, G: number, B: number }, foundPoints: number }[]} centroids
+ */
+function migratePixelsToBetterCentroids(averageCells, amountOfPixels, centroids) {
+    for (let pixelIndex = 0; pixelIndex < amountOfPixels; pixelIndex++) {
+        const cell = averageCells[pixelIndex];
+        // TODO: this needs to be fixed when we compute averageCells!
+        if (!cell) {
+            continue;
+        }
+
+        cell.findNewCentroid(centroids);
+    }
 }
 
 /**
@@ -132,21 +164,21 @@ class Pixel {
     }
 
     /**
-     * @param {number[]} centroids 
+     * @param {{ centroid: { R: number, G: number, B: number }, foundPoints: number }[]} centroids
      */
     findNewCentroid(centroids) {
-        let centroid;
+        let minCentroidIndex = 0;
         let minDistance = Infinity;
 
         for (let centroidIndex = 0; centroidIndex < centroids.length; centroidIndex++) {
-            const distance = calculateDistance(this.r, this.b, this.g, centroids[centroidIndex][0], centroids[centroidIndex][1], centroids[centroidIndex][2]);
+            const distance = calculateDistance(this.r, this.b, this.g, centroids[centroidIndex].centroid.R, centroids[centroidIndex].centroid.G, centroids[centroidIndex].centroid.B);
 
             if (distance < minDistance) {
                 minDistance = distance;
-                centroid = centroid[centroidIndex];
+                minCentroidIndex = centroidIndex;
             }
         }
 
-        this.centroidIndex;
+        this.centroidIndex = minCentroidIndex;
     }
 }
