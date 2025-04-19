@@ -10,15 +10,18 @@ class Pixel {
      * @param {number} blue
      *
      * @param {number} number - The number of this paint by color
+     * @param {number} pixelSize - Sizeof a single pixel
      *
      * @param {boolean} painted - If the pixel has been painted already
      */
-    constructor(id, red, green, blue, number, painted = false) {
+    constructor(id, red, green, blue, number, pixelSize, painted = false) {
         this.id = id;
 
         this.red = red;
         this.green = green;
         this.blue = blue;
+
+        this.pixelSize = pixelSize;
 
         this.number = number;
         this.canShowNumber = false;
@@ -28,6 +31,7 @@ class Pixel {
     buildWrapper() {
         const wrapper = document.createElement('pixel-wrapper');
         wrapper.id = `p-${this.id}`;
+        wrapper.style = `width: ${this.pixelSize + 2}px; height: ${this.pixelSize + 2}px;`;
         return wrapper;
     }
 

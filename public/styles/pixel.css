@@ -2,12 +2,14 @@
 #image-container {
     overflow: scroll;
     width: 100%;
-    height: calc(100% - 180px);
+    height: calc(100% - 194px);
+    display: flex;
+    flex-direction: column;
 }
 
 .pixel-row {
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
 }
 
 pixel-wrapper {

@@ -1,0 +1,25 @@
+.footer {
+    height: 125px;
+}
+
+#color-holder {
+    display: flex;
+    flex-direction: row;
+    overflow-x: scroll;
+}
+
+.color-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.color {
+    width: 55px;
+    height: 55px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    cursor: pointer;
+}

@@ -34,8 +34,8 @@ $cwqs('#new-image-upload', (uploader) => {
             generateImageData({
                 imageData: e.target.result,
                 onLoad: (result) => {
-                    const { width, height, centroids, pixels } = JSON.parse(result);
-                    new BaseImage(width, height, centroids, pixels);
+                    const { width, height, centroids, pixels, pixelSize } = JSON.parse(result);
+                    new BaseImage(width, height, centroids, pixels, pixelSize);
                 },
                 onError: (e) => {
                     console.log('error', e);

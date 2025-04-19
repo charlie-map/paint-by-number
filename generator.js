@@ -17,9 +17,9 @@ export async function generate(imageData, difficulty = 'medium') {
     const { data, width, height } = await pixels(imageData);
 
     let pixelSize = width < height ? width * difficulties[difficulty] : height * difficulties[difficulty];
-    const postWidth = Math.ceil(width / pixelSize);
-    const postHeight = Math.ceil(height / pixelSize);
-    pixelSize = Math.ceil(pixelSize);
+    pixelSize = pixelSize < 1 ? Math.ceil(pixelSize) : Math.floor(pixelSize);
+    const postWidth = Math.floor(width / pixelSize);
+    const postHeight = Math.floor(height / pixelSize);
 
     // Generate simple cells.
     const amountOfPixels = postWidth * postHeight;
@@ -32,7 +32,7 @@ export async function generate(imageData, difficulty = 'medium') {
 
     const averageCells = getAverageCells(data, width, height, pixelSize, centroids);
 
-    const centroidMovingAverages = [];
+    let centroidMovingAverages = [];
     centroids.forEach((centroid) => {
         centroidMovingAverages.push({
             centroid,
@@ -40,14 +40,17 @@ export async function generate(imageData, difficulty = 'medium') {
         })
     });
 
-    calculateCentroidAverages(averageCells, amountOfPixels, centroidMovingAverages);
-    migratePixelsToBetterCentroids(averageCells, amountOfPixels, centroidMovingAverages)
+    for (let _moveCentroidsANumberOfTimes = 0; _moveCentroidsANumberOfTimes < Math.floor(centroids.length / 8); _moveCentroidsANumberOfTimes++) {
+        centroidMovingAverages = calculateCentroidAverages(averageCells, amountOfPixels, centroidMovingAverages, difficulty);
+        migratePixelsToBetterCentroids(averageCells, amountOfPixels, centroidMovingAverages);
+    }
 
     const baseCells = averageCells.map(cell => cell.centroidIndex);
 
     return {
         width: postWidth,
         height: postHeight,
+        pixelSize,
         centroids: centroidMovingAverages,
         pixels: baseCells,
     };
@@ -59,8 +62,9 @@ export async function generate(imageData, difficulty = 'medium') {
  * @param {Pixel[]} averageCells
  * @param {number} amountOfPixels
  * @param {{ centroid: { R: number, G: number, B: number }, foundPoints: number }[]} centroidMovingAverages
+ * @param {'extreme' | 'hard' | 'medium' | 'easy' | 'simple'} difficulty The specific difficulty level chosen by user
  */
-function calculateCentroidAverages(averageCells, amountOfPixels, centroidMovingAverages) {
+function calculateCentroidAverages(averageCells, amountOfPixels, centroidMovingAverages, difficulty) {
     // Average the centroids around a few times to even things out
     for (let pixelIndex = 0; pixelIndex < amountOfPixels; pixelIndex++) {
         const cell = averageCells[pixelIndex];
@@ -77,6 +81,33 @@ function calculateCentroidAverages(averageCells, amountOfPixels, centroidMovingA
         currentCentroid.centroid.B = (currentCentroid.centroid.B * currentCentroid.foundPoints + cell.b) / (currentCentroid.foundPoints + 1);
         currentCentroid.foundPoints += 1;
     }
+
+    // Check centroids - if the distance between to centroid points is too low, combine them.
+    const newCentroidMovingAverages = [];
+    for (let centroidMovingAverageOuter = 0; centroidMovingAverageOuter < centroidMovingAverages.length; centroidMovingAverageOuter++) {
+        if (!centroidMovingAverages[centroidMovingAverageOuter]) {
+            continue;
+        }
+
+        for (let centroidMovingAverageInner = centroidMovingAverageOuter + 1; centroidMovingAverageInner < centroidMovingAverages.length; centroidMovingAverageInner++) {
+            const outer = centroidMovingAverages[centroidMovingAverageOuter].centroid;
+            const inner = centroidMovingAverages[centroidMovingAverageInner]?.centroid;
+
+            if (!inner) {
+                continue;
+            }
+            const distance = calculateDistance(outer.R, outer.G, outer.B, inner.R, inner.G, inner.B);
+
+            if (distance < 300 * difficulties[difficulty]) {
+                // Remove inner.
+                centroidMovingAverages[centroidMovingAverageInner] = null;
+            }
+        }
+
+        newCentroidMovingAverages.push(centroidMovingAverages[centroidMovingAverageOuter]);
+    }
+
+    return newCentroidMovingAverages;
 }
 
 /**
